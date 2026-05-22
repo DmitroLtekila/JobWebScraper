@@ -35,8 +35,9 @@ async def scraping_urls():
         await page.locator("[data-test=\"input-kw\"] [data-test=\"input-field\"]").fill("Data analyst")
         await page.locator("[data-test=\"input-kw\"] [data-test=\"input-field\"]").press("Enter")
         # page.locator("iframe[src=\"https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/turnstile/f/ov2/av0/rch/h0z7a/0x4AAAAAAADnPIDROrmt1Wwj/light/fbE/new/normal?lang=auto\"]").content_frame.locator("body").click()
-        parsed = []
         
+        parsed = []
+        url_set = set()
         page_number = 1
         
         while True:
@@ -53,9 +54,10 @@ async def scraping_urls():
                 
                 url = item.find(attrs={"data-test": "link-offer"})
                 text_of_url = url.get("href") if url else "None"
-                if text_of_url != "None" and text_of_url not in [item['j*b url'] for item in parsed]:
+                if text_of_url != "None" and text_of_url not in url_set:
+                    url_set.add(text_of_url)
                     parsed.append({
-                        'j*b url': text_of_url,
+                        'job url': text_of_url,
                     })
             if await next_button.is_visible():
                 await next_button.click()
@@ -69,7 +71,7 @@ async def scraping_urls():
         csv_filename = 'url.csv'
         if os.path.exists(csv_filename):
             df_existing = pd.read_csv(csv_filename)
-            df_new = df_new[~df_new['j*b url'].isin(df_existing['j*b url'])]
+            df_new = df_new[~df_new['job url'].isin(df_existing['job url'])]
             df_new.to_csv(csv_filename, mode='a', index=False, header=False)
         else:
             df_new.to_csv(csv_filename, mode='w', index=False, header=True)
@@ -224,8 +226,8 @@ async def main():
                 w.cancel()
                 
 if __name__=="__main__":
-    # asyncio.run(main())
-    asyncio.run(scraping_urls())
+    asyncio.run(main())
+    # asyncio.run(scraping_urls())
     # asyncio.run(scrap_one_page())
     
 
