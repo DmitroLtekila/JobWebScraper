@@ -1,5 +1,6 @@
 from multiprocessing import pool
 import os
+import random
 import re
 import asyncio
 import pandas as pd
@@ -10,6 +11,7 @@ from bs4 import BeautifulSoup
 import httpx
 import curl_cffi
 from curl_cffi import AsyncSession
+from curl_cffi.requests.exceptions import HTTPError
 
 connect = "dbname=jobdata user=postgres password=1234 host=localhost port=5432"
 
@@ -88,12 +90,7 @@ async def scraping_urls():
             
         
 async def scrap_one_page(url, session):
-    # page = await browser.new_page()
-    # await page.route(
-    #     "**/*.{png,jpg,jpeg,gif,webp,svg,css,woff,woff2,eot,ttf}",
-    #     lambda route: route.abort()
-    # )
-    # await page.goto(url)
+    await asyncio.sleep(random.uniform(5, 12))
     
     responce = await session.get(url, impersonate="chrome", timeout=15.0)
     
@@ -178,26 +175,41 @@ async def task(queue, pool, session):
     while not queue.empty():
         try:
             url = queue.get_nowait()
+        except asyncio.QueueEmpty:
+            break
+        try:
             scraped_data = await scrap_one_page(url, session)
             benefits = scraped_data["benefits"]
             tech = scraped_data["expected_technologies"]
             resp = scraped_data["responsibilities"]
             req = scraped_data["requirements"]
-        except asyncio.QueueEmpty:
-            break
-        async with pool.connection() as conn:
-            async with conn.cursor() as acur:
-                await acur.execute("""
-                INSERT INTO job_data (url, benefits, expected_technologies, responsibilities, requirements)
-                VALUES (%(url)s, %(benefits)s, %(expected_technologies)s, %(responsibilities)s, %(requirements)s)
-                ON CONFLICT(url)
-                DO NOTHING
-            """,
-            {'url': url, 'benefits': benefits, 'expected_technologies': tech, 
-            'responsibilities': resp, 'requirements': req})
-        # print(f"Successfully saved: {url}")
-        queue.task_done()
-        await asyncio.sleep(0.1)
+            async with pool.connection() as conn:
+                async with conn.cursor() as acur:
+                    await acur.execute("""
+                    INSERT INTO job_data (url, benefits, expected_technologies, responsibilities, requirements)
+                    VALUES (%(url)s, %(benefits)s, %(expected_technologies)s, %(responsibilities)s, %(requirements)s)
+                    ON CONFLICT(url)
+                    DO NOTHING
+                """,
+                {'url': url, 'benefits': benefits, 'expected_technologies': tech, 
+                'responsibilities': resp, 'requirements': req})
+            print(f"Successfully saved: {url}")
+        except HTTPError as http_err:
+            if "429" in str(http_err):
+                await queue.put(url) 
+                    
+                cooldown = random.uniform(60, 120) # Take a long 1-2 minute break to clear IP flags
+                print(f"\n 429 Rate Limit Triggered by {url}.")
+                
+                await asyncio.sleep(cooldown)
+            else:
+                print(f"HTTP error occurred for {url}: {http_err}")
+        except Exception as exs:
+            print("Exception with scraping or db", exs)   
+            
+        finally:
+            queue.task_done()
+            await asyncio.sleep(random.uniform(0.5, 1.5))
     
 async def main():
     df = pd.read_csv('url.csv')
@@ -205,32 +217,24 @@ async def main():
     df = df.drop_duplicates(subset=[df.columns[0]])
     url_list = [row[0] for row in df.itertuples(index=False)]
     queue = asyncio.Queue()
-    for url in url_list:
-        await queue.put(url)
-        
-    print(f"Loaded {queue.qsize()} URLs into memory queue.")
     
-    async with psycopg_pool.AsyncConnectionPool(connect, max_size=25) as pool:
-        # async with async_playwright() as p:
-        #     optimized_args = [
-        #         "--disable-blink-features=AutomationControlled", # Bypass basic bot detection
-        #         "--disable-gpu",                                 # Turn off graphics rendering calculation
-        #         "--disable-dev-shm-usage",                       # Prevent memory crashes in docker/linux
-        #         "--no-first-run",                                # Skip welcome screens
-        #         "--no-sandbox",                                  # Speed up execution environment
-        #         "--blink-settings=imagesEnabled=false",          # Structural fallback to prevent images
-        #     ]
-        #     browser = await p.chromium.launch_persistent_context(
-        #         user_data_dir="./user_data",
-        #         channel="chrome",
-        #         headless=True,
-        #         # This argument helps bypass some automation detections
-        #         args=optimized_args
-        #     )
+    async with psycopg_pool.AsyncConnectionPool(connect, max_size=15) as pool:
+        async with pool.connection() as conn:
+            async with conn.cursor() as acur:
+                await acur.execute("""
+                    SELECT url FROM job_data
+                """)
+                rows = await acur.fetchall()
+                existing_urls = {row[0] for row in rows}
+                for url in url_list:
+                    if url not in existing_urls:
+                        await queue.put(url)
+                print(f"Loaded {queue.qsize()} URLs into memory queue.")
+        
         async with AsyncSession() as session:
             tasks = [
                 asyncio.create_task(task(queue, pool, session))
-                for i in range(25)
+                # for i in range(15)
             ]
             await queue.join()
             
@@ -238,8 +242,8 @@ async def main():
                 w.cancel()
                 
 if __name__=="__main__":
-    # asyncio.run(main())
-    asyncio.run(scraping_urls())
+    asyncio.run(main())
+    # asyncio.run(scraping_urls())
     # asyncio.run(scrap_one_page())
     
 
