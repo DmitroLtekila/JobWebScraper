@@ -49,10 +49,9 @@ async def scraping_urls():
             print("Processing page:", page_number)
             soup = BeautifulSoup(await page.content(), features="html.parser")
             
-            for item in soup.find_all("div", class_ = "tiles_cobg3mp"):
+            for url in soup.find_all(attrs={"data-test": "link-offer"}):
                 # find() returns None if not found, so we check before accessing attributes
                 
-                url = item.find(attrs={"data-test": "link-offer"})
                 text_of_url = url.get("href") if url else "None"
                 if text_of_url != "None" and text_of_url not in url_set:
                     url_set.add(text_of_url)
@@ -80,7 +79,6 @@ async def scraping_urls():
                     df_new = df_new[~df_new['job url'].isin(df_existing['job url'])]
             except pd.errors.EmptyDataError:
                 print("Error with reading CSV")
-
             if not df_new.empty:
                 df_new.to_csv(csv_filename, mode='a', index=False, header=False)
             else:
