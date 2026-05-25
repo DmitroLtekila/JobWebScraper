@@ -2,6 +2,7 @@ user_data/
 .chromium/
 
 url.csv
+test.csv
 
 __pycache__/
 *.pyc

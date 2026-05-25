@@ -67,7 +67,11 @@ async def scraping_urls():
                 break
         await browser.close()
         
-        df_new = pd.DataFrame(parsed)
+        if not parsed:
+            print("No URLs found.")
+            return
+        
+        df_new = pd.DataFrame(parsed, columns=['job url'])
         csv_filename = 'url.csv'
         if os.path.exists(csv_filename):
             df_existing = pd.read_csv(csv_filename)
@@ -180,6 +184,8 @@ async def task(queue, pool, session):
                 await acur.execute("""
                 INSERT INTO job_data (url, benefits, expected_technologies, responsibilities, requirements)
                 VALUES (%(url)s, %(benefits)s, %(expected_technologies)s, %(responsibilities)s, %(requirements)s)
+                ON CONFLICT(url)
+                DO NOTHING
             """,
             {'url': url, 'benefits': benefits, 'expected_technologies': tech, 
             'responsibilities': resp, 'requirements': req})
@@ -226,8 +232,8 @@ async def main():
                 w.cancel()
                 
 if __name__=="__main__":
-    asyncio.run(main())
-    # asyncio.run(scraping_urls())
+    # asyncio.run(main())
+    asyncio.run(scraping_urls())
     # asyncio.run(scrap_one_page())
     
 
