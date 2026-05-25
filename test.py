@@ -74,9 +74,17 @@ async def scraping_urls():
         df_new = pd.DataFrame(parsed, columns=['job url'])
         csv_filename = 'url.csv'
         if os.path.exists(csv_filename):
-            df_existing = pd.read_csv(csv_filename)
-            df_new = df_new[~df_new['job url'].isin(df_existing['job url'])]
-            df_new.to_csv(csv_filename, mode='a', index=False, header=False)
+            try:
+                df_existing = pd.read_csv(csv_filename)
+                if 'job url' in df_existing.columns:
+                    df_new = df_new[~df_new['job url'].isin(df_existing['job url'])]
+            except pd.errors.EmptyDataError:
+                print("Error with reading CSV")
+
+            if not df_new.empty:
+                df_new.to_csv(csv_filename, mode='a', index=False, header=False)
+            else:
+                print("All links are already in the file")
         else:
             df_new.to_csv(csv_filename, mode='w', index=False, header=True)
             
