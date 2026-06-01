@@ -12,7 +12,17 @@ import httpx
 import curl_cffi
 from curl_cffi import AsyncSession
 from curl_cffi.requests.exceptions import HTTPError
+from openai import OpenAI
+from pydantic import BaseModel, Field
+import instructor
+import json
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
+import analysis_with_AI as AWAI
+
+api_key = os.getenv("API_KEY")
 connect = "dbname=jobdata user=postgres password=1234 host=localhost port=5432"
 
 async def scraping_urls():
@@ -109,21 +119,6 @@ async def scrap_one_page(url, session):
                 benefit_text = benefit.get_text(strip=True)
                 benefits_list.append(benefit_text)
     
-    # At first I made separetly for each element, and then I saw that it is a list    
-    # Workplace
-    # workplace = "None"
-    # if section_benefit_list:
-    #     if section_benefit_workplace := section_benefit_list.find(attrs={"data-test":"sections-benefit-workplaces"}):
-    #         if workplace_soup := section_benefit_workplace.find(attrs={"data-test":"offer-badge-title"}):
-    #             workplace = workplace_soup.get_text(strip=True)           
-    # parsed.append({
-    #     'workplace' : workplace,
-    #     'contract' : contract,
-    #     'schedule' : schedule,
-    #     'employment_name' : name,
-    #     'work_modes' : work_modes
-    # })
-    
     # Expected technologies
     expected_technologies_list = []
     
@@ -211,7 +206,7 @@ async def task(queue, pool, session):
             queue.task_done()
             await asyncio.sleep(random.uniform(0.5, 1.5))
     
-async def main():
+async def write_to_db():
     df = pd.read_csv('url.csv')
     queue = asyncio.Queue()
     df = df.drop_duplicates(subset=[df.columns[0]])
@@ -240,10 +235,26 @@ async def main():
             
             for w in tasks:
                 w.cancel()
-                
+
+async def main():    
+    async with psycopg_pool.AsyncConnectionPool(connect, max_size=15) as pool:
+        queue = asyncio.Queue(maxsize=100)
+        reading_db = asyncio.create_task(AWAI.get_data_from_db(queue, pool))
+        tasks = [
+            asyncio.create_task(AWAI.ai_task(queue, pool))
+            for i in range(7)
+        ]
+        await reading_db
+        await queue.join()
+        for w in tasks:
+            w.cancel()
+
+
 if __name__=="__main__":
-    asyncio.run(main())
+    # asyncio.run(get_responce_from_AI())
+    # asyncio.run(write_to_db())
     # asyncio.run(scraping_urls())
     # asyncio.run(scrap_one_page())
+    asyncio.run(main())
     
 
