@@ -255,6 +255,7 @@ if __name__=="__main__":
     # asyncio.run(write_to_db())
     # asyncio.run(scraping_urls())
     # asyncio.run(scrap_one_page())
-    asyncio.run(main())
+    # asyncio.run(main())
+    print("Hello")
     
 
