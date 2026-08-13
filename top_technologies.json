@@ -1,4 +1,8 @@
 {
+    "SoapUI": 54,
+    "ERP systems":	60,
+    "Airflow":	60,
+    "Spark": 62,
     "DAX": 62,
     "Power Automate": 62,
     "Pandas": 64,
@@ -18,7 +22,6 @@
     "PowerPoint": 93,
     "Microsoft Azure": 95,
     "ETL": 96,
-    "data analysis": 97,
     "C#": 100,
     "PL/SQL": 102,
     "JavaScript": 105,

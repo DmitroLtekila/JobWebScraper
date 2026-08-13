@@ -1,0 +1,66 @@
+[
+    {
+        "companyDomain": "it_services_consulting",
+        "count": 1749
+    },
+    {
+        "companyDomain": "other",
+        "count": 888
+    },
+    {
+        "companyDomain": "technology_software",
+        "count": 647
+    },
+    {
+        "companyDomain": "banking_fintech",
+        "count": 546
+    },
+    {
+        "companyDomain": "manufacturing",
+        "count": 172
+    },
+    {
+        "companyDomain": "logistics_supply_chain",
+        "count": 127
+    },
+    {
+        "companyDomain": "ecommerce_marketplace",
+        "count": 116
+    },
+    {
+        "companyDomain": "media_marketing",
+        "count": 104
+    },
+    {
+        "companyDomain": "retail_consumer_goods",
+        "count": 70
+    },
+    {
+        "companyDomain": "energy_utilities",
+        "count": 50
+    },
+    {
+        "companyDomain": "healthcare_pharma",
+        "count": 47
+    },
+    {
+        "companyDomain": "insurance",
+        "count": 39
+    },
+    {
+        "companyDomain": "public_sector",
+        "count": 28
+    },
+    {
+        "companyDomain": "education",
+        "count": 21
+    },
+    {
+        "companyDomain": "telecommunications",
+        "count": 17
+    },
+    {
+        "companyDomain": "transport_aviation",
+        "count": 7
+    }
+]

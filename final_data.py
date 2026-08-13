@@ -92,8 +92,30 @@ async def add_to_df():
     res = OrderedDict(sorted(ditc.items(), key=lambda item: item[1]))
     with open("top_technologies.json", "w") as f:
         json.dump(res, f, indent=4)
-    # for item in ditc:
-    #     print(f"{item}: {ditc[item]}")
+
+
+async def get_domain(pool):
+    result = []
+    async with pool.connection() as conn:
+            async with conn.cursor() as acur:
+                await acur.execute("""
+                SELECT extracted_data -> 'companyDomain' AS domain, COUNT(*)	
+                FROM analysed_data
+                GROUP BY domain
+                ORDER BY COUNT(*) DESC
+                """)
+                async for row in acur:
+                    result += [{"companyDomain": row[0], "count": row[1]}]
+            
+    return result
+
+async def get_domain_data():
+    async with psycopg_pool.AsyncConnectionPool(connect, max_size=15) as pool:
+        result = await get_domain(pool)
+    with open("domains_frequency.json", "w") as f:
+        json.dump(result, f, indent=4)
+
 
 if __name__=="__main__":
-    asyncio.run(add_to_df())
+    # asyncio.run(add_to_df())
+    asyncio.run(get_domain_data())
