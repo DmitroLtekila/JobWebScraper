@@ -6,9 +6,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Analysis</title>
+
+    <style>
+        #scroll-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        }
+        #job-container
+        {
+            width: 300px;
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        .job-card {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+    </style>
+
 </head>
 <body>
-    <script type="py" config="./conf.json" src="./python_webpage.py"></script>
-
+    <div id="scroll-box"> 
+        <div id="job-container">Jobs gonna appear here...</div>
+    </div>
+    <script type="py" src="./python_webpage.py"></script>
+    
 </body>
 </html>
