@@ -9,13 +9,13 @@
 
     <style>
         #scroll-box {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        margin: 0;
-        font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 45vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
         }
         #job-container
         {
@@ -32,14 +32,57 @@
             border-radius: 4px;
             border: 1px solid #e0e0e0;
         }
+        #card-box {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            min-height: 45vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #card-list {
+            width: 700px;
+            height: 230px;
+            border: 1px solid #18ce70;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+        .info-card {
+            background: rgb(166, 22, 214);
+            width: 150px;
+            height: 170px;
+            border: 3px solid #18ce70;
+            margin: 17px;
+            align-items: center;
+            justify-content: center;
+            display: flex;
+        }
     </style>
 
 </head>
 <body>
+    <div id="card-box">
+        <div id="card-list"></div>
+    </div>
     <div id="scroll-box"> 
         <div id="job-container">Jobs gonna appear here...</div>
     </div>
+
+    <div style="width: 800px;">
+        <canvas id="acquisitions"></canvas>
+    </div>
+
+    <script type="module" src="./page.js"></script>
+    <div id="description-box">
+        <p id="description">Smol description, which will be the part of README description.</p>
+    </div>
     <script type="py" src="./python_webpage.py"></script>
+    
     
 </body>
 </html>
